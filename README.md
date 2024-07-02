@@ -1,2 +1,2 @@
-# ayebear.github.io
+# ayebear.com
 Portfolio website
