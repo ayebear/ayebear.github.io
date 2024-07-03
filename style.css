@@ -43,6 +43,23 @@ body {
 	height: auto;
 }
 
+.info {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.info-left {
+	text-align: left;
+	padding: 0.2rem;
+}
+
+.info-right {
+	font-size: 2.5rem;
+	color: #888888;
+	padding-top: 1rem;
+}
+
 .title {
 	font-size: 1.2rem;
 	font-weight: bold;
