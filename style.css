@@ -23,13 +23,27 @@ body {
 	padding: 1rem;
 	text-align: center;
 	width: 300px;
-	/* height: 200px; */
 }
 
 /* Full cards on mobile */
 @media (max-width: 850px) {
 	.project {
 		width: 100%;
+	}
+
+	body {
+		padding: 0;
+	}
+}
+
+/* Centered images on large screens */
+@media not (max-width: 850px) {
+	.image-container {
+		height: 240px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		overflow: hidden;
 	}
 }
 
