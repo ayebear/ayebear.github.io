@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toroidal Mapping Functions</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: 'Courier New', monospace;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00ff00;
+            margin-bottom: 30px;
+        }
+
+        .tier-section {
+            margin-bottom: 40px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            background: #222;
+        }
+
+        .tier-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #ffff00;
+        }
+
+        .canvas-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            border: 2px solid #444;
+            border-radius: 4px;
+            background: #000;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+
+        .description {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .formula {
+            background: #111;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            border-left: 3px solid #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Road to Voidless Toroidal Mapping Functions</h1>
+
+        <div class="tier-section">
+            <div class="tier-title">Tier A: 0 Axis Offset</div>
+            <div class="canvas-container">
+                <canvas id="canvasA" width="400" height="400"></canvas>
+            </div>
+            <div class="description">
+                Basic toroidal mapping with no offset. Maps global coordinates (-∞, ∞) to local coordinates [0, 1).
+                <div class="formula">local = fract(global)</div>
+            </div>
+        </div>
+
+        <div class="tier-section">
+            <div class="tier-title">Tier B: 1 Axis Offset</div>
+            <div class="canvas-container">
+                <canvas id="canvasBX" width="400" height="400"></canvas>
+                <canvas id="canvasBY" width="400" height="400"></canvas>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="offsetX">X Offset:</label>
+                    <input type="range" id="offsetX" min="0" max="0.99" step="0.01" value="0.3">
+                    <span id="offsetXValue">0.30</span>
+                </div>
+                <div class="control-group">
+                    <label for="offsetY">Y Offset:</label>
+                    <input type="range" id="offsetY" min="0" max="0.99" step="0.01" value="0.7">
+                    <span id="offsetYValue">0.70</span>
+                </div>
+            </div>
+            <div class="description">
+                Spatial transformation mapping with offset applied to one axis at a time. Uses coordinate system rotation where the offset creates a shear transformation. Left shows X offset transformation, right shows Y offset transformation.
+                <div class="formula">adj = rpos.yx * vec2(offset_x, 0.0) + global  // X offset<br>adj = rpos.yx * vec2(0.0, offset_y) + global  // Y offset<br>local = fract(adj)</div>
+            </div>
+        </div>
+
+        <div class="tier-section">
+            <div class="tier-title">Tier C: 2 Axis Offset with Void</div>
+            <div class="canvas-container">
+                <canvas id="canvasC" width="400" height="400"></canvas>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="offsetCX">X Offset:</label>
+                    <input type="range" id="offsetCX" min="0" max="0.99" step="0.01" value="0.7">
+                    <span id="offsetCXValue">0.70</span>
+                </div>
+                <div class="control-group">
+                    <label for="offsetCY">Y Offset:</label>
+                    <input type="range" id="offsetCY" min="0" max="0.99" step="0.01" value="0.3">
+                    <span id="offsetCYValue">0.30</span>
+                </div>
+            </div>
+            <div class="description">
+                Complex geometric mapping with dual-axis offsets using intersection algorithms. Creates a toroidal lattice where some areas map to void space (black). Uses periodic line intersections and AABB containment checks to find valid mappings.
+                <div class="formula">step_x = vec2(1.0, offset_y)<br>step_y = vec2(offset_x, -1.0)<br>// Uses periodic intersection to find contained points<br>// In production code, negative values represent void space</div>
+            </div>
+        </div>
+
+        <div class="tier-section">
+            <div class="tier-title">Tier D: 2 Axis Offset without Void (Distorted Space)</div>
+            <div class="canvas-container">
+                <canvas id="canvasD" width="400" height="400"></canvas>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="offsetDX">X Offset:</label>
+                    <input type="range" id="offsetDX" min="0" max="0.99" step="0.01" value="0.3">
+                    <span id="offsetDXValue">0.30</span>
+                </div>
+                <div class="control-group">
+                    <label for="offsetDY">Y Offset:</label>
+                    <input type="range" id="offsetDY" min="0" max="0.99" step="0.01" value="0.7">
+                    <span id="offsetDYValue">0.70</span>
+                </div>
+            </div>
+            <div class="description">
+                Simple sine wave surface distortion. Applies sinusoidal modulation to create smooth wavy patterns across the toroidal space without creating voids.
+                <div class="formula">
+                    local = fract(global)<br>
+                    waveX = sin(global.y × 2π) × offset.x × 0.5<br>
+                    waveY = sin(global.x × 2π) × offset.y × 0.5<br>
+                    result = fract(local + vec2(waveX, waveY))
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to generate base shader source
+        function generateBaseShaderSource(toroidalMap) {
+            return `
+                precision mediump float;
+                uniform vec2 u_resolution;
+                uniform vec2 u_offset;
+                uniform vec2 u_distortion;
+                uniform float u_curvePower;
+                uniform int u_axis; // 0 = X offset, 1 = Y offset for tier B
+
+                ${toroidalMap}
+
+                void main() {
+                    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+
+                    // Convert to world coordinates: show ~5x5 repeats centered around origin
+                    vec2 global = (uv - 0.5) * 5.0 + 0.5;
+
+                    vec2 local = toroidalMap(global);
+
+                    // Map output to red (x) and green (y)
+                    gl_FragColor = vec4(local.x, local.y, 0.0, 1.0);
+                }
+            `;
+        }
+
+        // Shader source code
+        const vertexShaderSource = `
+            attribute vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        `;
+
+        // Fragment shader sources array
+        const fragmentShaderSources = [
+            // Tier A: Basic toroidal mapping
+            generateBaseShaderSource(`
+                vec2 toroidalMap(vec2 global) {
+                    return fract(global);
+                }
+            `),
+            // Tier B: Single axis offset - spatial transformation
+            generateBaseShaderSource(`
+                vec2 toroidalMap(vec2 global) {
+                    vec2 rpos = floor(global);
+                    vec2 neg_offset = vec2(u_offset.x, -u_offset.y);
+                    vec2 adj;
+
+                    if (u_axis == 0) {
+                        // X offset: apply spatial transformation
+                        adj = rpos.yx * vec2(neg_offset.x, 0.0) + global;
+                    } else {
+                        // Y offset: apply spatial transformation
+                        adj = rpos.yx * vec2(0.0, neg_offset.y) + global;
+                    }
+                    return fract(adj);
+                }
+            `),
+            // Tier C: Two axis offset with void
+            generateBaseShaderSource(`
+                // Helper function for perpendicular dot product
+                float perp_dot(vec2 a, vec2 b) {
+                    return a.x * b.y - a.y * b.x;
+                }
+
+                // Helper function to get AABB center
+                vec2 aabb_center(vec4 aabb) {
+                    return vec2(aabb.x + aabb.z * 0.5, aabb.y + aabb.w * 0.5);
+                }
+
+                // Helper function to check AABB containment
+                bool aabb_contains(vec4 aabb, vec2 point) {
+                    return point.x >= aabb.x && point.x < aabb.x + aabb.z &&
+                           point.y >= aabb.y && point.y < aabb.y + aabb.w;
+                }
+
+                // Line intersection function
+                vec3 line_intersection(vec4 la, vec4 lb) {
+                    vec2 a = la.xy - la.zw;
+                    vec2 b = lb.xy - lb.zw;
+                    float d = perp_dot(a, b);
+
+                    if (d == 0.0) {
+                        return vec3(0.0);
+                    }
+
+                    float cross_a = perp_dot(la.xy, la.zw);
+                    float cross_b = perp_dot(lb.xy, lb.zw);
+                    vec2 v = b * cross_a - a * cross_b;
+                    return vec3(v / d, 1.0);
+                }
+
+                // Periodic intersection function
+                vec3 periodic_intersection(vec4 la, vec4 lb) {
+                    vec3 intersect = line_intersection(la, lb);
+                    if (intersect.z == 0.0) {
+                        return vec3(0.0);
+                    }
+
+                    float period = distance(lb.xy, lb.zw);
+                    if (period == 0.0) {
+                        return vec3(0.0);
+                    }
+
+                    float int_dist = distance(lb.xy, intersect.xy);
+                    float count = floor(int_dist / period + 0.5); // Replace round() with floor(x + 0.5)
+                    vec2 step = lb.zw - lb.xy;
+                    vec2 a = lb.xy + count * step;
+                    vec2 b = lb.xy - count * step;
+
+                    float a_dist = distance(a, intersect.xy);
+                    float b_dist = distance(b, intersect.xy);
+
+                    if (a_dist < b_dist) {
+                        return vec3(a, 1.0);
+                    }
+                    return vec3(b, 1.0);
+                }
+
+                // Find contained point function
+                vec3 find_contained(vec4 aabb, vec2 point, vec2 step_x, vec2 step_y) {
+                    if (aabb.z <= 0.0 || aabb.w <= 0.0) {
+                        return vec3(0.0);
+                    }
+
+                    vec2 origin = aabb_center(aabb);
+                    vec4 axis_x = vec4(origin, origin + step_x);
+                    vec4 line_y = vec4(point, point + step_y);
+                    vec3 half_point = periodic_intersection(axis_x, line_y);
+
+                    if (half_point.z == 0.0) {
+                        return vec3(0.0);
+                    }
+
+                    vec4 axis_y = vec4(origin, origin + step_y);
+                    vec4 line_x = vec4(half_point.xy, half_point.xy + step_x);
+                    vec3 pt = periodic_intersection(axis_y, line_x);
+
+                    if (pt.z == 0.0) {
+                        return vec3(0.0);
+                    }
+
+                    vec2 p = pt.xy;
+
+                    // Check 3x3 deltas around point for aabb.contains
+                    if (aabb_contains(aabb, p)) return vec3(p, 1.0);
+                    if (aabb_contains(aabb, p + step_x)) return vec3(p + step_x, 1.0);
+                    if (aabb_contains(aabb, p - step_x)) return vec3(p - step_x, 1.0);
+                    if (aabb_contains(aabb, p + step_y)) return vec3(p + step_y, 1.0);
+                    if (aabb_contains(aabb, p - step_y)) return vec3(p - step_y, 1.0);
+                    if (aabb_contains(aabb, p + step_x + step_y)) return vec3(p + step_x + step_y, 1.0);
+                    if (aabb_contains(aabb, p + step_x - step_y)) return vec3(p + step_x - step_y, 1.0);
+                    if (aabb_contains(aabb, p - step_x + step_y)) return vec3(p - step_x + step_y, 1.0);
+                    if (aabb_contains(aabb, p - step_x - step_y)) return vec3(p - step_x - step_y, 1.0);
+
+                    return vec3(0.0);
+                }
+
+                vec2 toroidalMap(vec2 global) {
+                    vec2 offset = u_offset;
+
+                    // Simple wrap with no offset
+                    if (offset.x == 0.0 && offset.y == 0.0) {
+                        return fract(global);
+                    }
+
+                    // Fast math for single axis offsets
+                    if (offset.x == 0.0 || offset.y == 0.0) {
+                        vec2 rpos = floor(global).yx;
+                        vec2 neg_offset = vec2(offset.x, -offset.y);
+                        vec2 adj = rpos * neg_offset + global;
+                        return fract(adj);
+                    }
+
+                    // Handle multi axis offsets
+                    vec2 step_x = vec2(1.0, offset.y);
+                    vec2 step_y = vec2(offset.x, -1.0);
+                    vec4 local_rect = vec4(0.0, 0.0, 1.0, 1.0);
+                    vec3 local = find_contained(local_rect, global, step_x, step_y);
+
+                    if (local.z == 1.0) {
+                        // Hit local space
+                        return local.xy;
+                    }
+
+                    // Hit void space - return black
+                    return vec2(0.0, 0.0);
+                }
+            `),
+            // Tier D: Simple sine wave surface
+            generateBaseShaderSource(`
+                vec2 toroidalMap(vec2 global) {
+                    vec2 offset = u_offset;
+                    float pi = 3.14159265359;
+
+                    // Start with basic fractional coordinates
+                    vec2 local = fract(global);
+
+                    // Apply sine wave modulation based on offsets
+                    float waveFreq = 2.0 * pi;
+                    float waveX = sin(global.y * waveFreq) * offset.x * 0.5;
+                    float waveY = sin(global.x * waveFreq) * offset.y * 0.5;
+
+                    // Add the wave displacement
+                    local.x = fract(local.x + waveX);
+                    local.y = fract(local.y + waveY);
+
+                    return local;
+                }
+            `)
+        ];
+
+        // WebGL setup
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+
+            return shader;
+        }
+
+        function createProgram(gl, vertexShader, fragmentShader) {
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program linking error:', gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+                return null;
+            }
+
+            return program;
+        }
+
+        function setupCanvas(canvasId, tier, axis = 0) {
+            const canvas = document.getElementById(canvasId);
+            const gl = canvas.getContext('webgl');
+
+            if (!gl) {
+                console.error('WebGL not supported');
+                return;
+            }
+
+            // Select appropriate fragment shader based on tier
+            const fragmentShaderSource = fragmentShaderSources[tier] || fragmentShaderSources[0];
+
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+            const program = createProgram(gl, vertexShader, fragmentShader);
+
+            const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
+            const resolutionUniformLocation = gl.getUniformLocation(program, 'u_resolution');
+            const offsetUniformLocation = gl.getUniformLocation(program, 'u_offset');
+            const distortionUniformLocation = gl.getUniformLocation(program, 'u_distortion');
+            const curvePowerUniformLocation = gl.getUniformLocation(program, 'u_curvePower');
+            const axisUniformLocation = gl.getUniformLocation(program, 'u_axis');
+
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                -1, -1,
+                 1, -1,
+                -1,  1,
+                -1,  1,
+                 1, -1,
+                 1,  1,
+            ]), gl.STATIC_DRAW);
+
+            function render() {
+                // Ensure canvas size matches display size
+                const canvas = gl.canvas;
+                const displayWidth = canvas.clientWidth;
+                const displayHeight = canvas.clientHeight;
+
+                if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+                    canvas.width = displayWidth;
+                    canvas.height = displayHeight;
+                }
+
+                gl.viewport(0, 0, canvas.width, canvas.height);
+                gl.clearColor(0, 0, 0, 1);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+
+                gl.useProgram(program);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.enableVertexAttribArray(positionAttributeLocation);
+                gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+                gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
+                gl.uniform1i(axisUniformLocation, axis);
+
+                // Get offset values
+                let offsetX = 0, offsetY = 0;
+                if (tier === 1) {
+                    offsetX = parseFloat(document.getElementById('offsetX').value);
+                    offsetY = parseFloat(document.getElementById('offsetY').value);
+                } else if (tier === 2) {
+                    offsetX = parseFloat(document.getElementById('offsetCX').value);
+                    offsetY = parseFloat(document.getElementById('offsetCY').value);
+                } else if (tier === 3) {
+                    offsetX = parseFloat(document.getElementById('offsetDX').value);
+                    offsetY = parseFloat(document.getElementById('offsetDY').value);
+                }
+
+                gl.uniform2f(offsetUniformLocation, offsetX, offsetY);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+            }
+
+            return render;
+        }
+
+        // Initialize all canvases
+        const renderA = setupCanvas('canvasA', 0);
+        const renderBX = setupCanvas('canvasBX', 1, 0);
+        const renderBY = setupCanvas('canvasBY', 1, 1);
+        const renderC = setupCanvas('canvasC', 2);
+        const renderD = setupCanvas('canvasD', 3);
+
+        // Update value displays
+        function updateValueDisplay(inputId, displayId) {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(displayId);
+            display.textContent = parseFloat(input.value).toFixed(2);
+        }
+
+        // Set up event listeners
+        const inputs = [
+            'offsetX', 'offsetY', 'offsetCX', 'offsetCY',
+            'offsetDX', 'offsetDY'
+        ];
+
+        inputs.forEach(inputId => {
+            const input = document.getElementById(inputId);
+            const displayId = inputId + 'Value';
+
+            input.addEventListener('input', () => {
+                updateValueDisplay(inputId, displayId);
+                // Re-render all canvases
+                renderA();
+                renderBX();
+                renderBY();
+                renderC();
+                renderD();
+            });
+        });
+
+        // Initial render
+        renderA();
+        renderBX();
+        renderBY();
+        renderC();
+        renderD();
+    </script>
+</body>
+</html>
